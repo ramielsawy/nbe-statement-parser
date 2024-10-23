@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/nbe-statement-parser)](https://www.npmjs.com/package/nbe-statement-parser)
 [![License](https://img.shields.io/npm/l/nbe-statement-parser)](LICENSE)
-[![Build Status](https://img.shields.io/github/workflow/status/yourusername/nbe-statement-parser/Node.js%20CI)](https://github.com/yourusername/nbe-statement-parser/actions)
+[![Build Status](https://img.shields.io/github/workflow/status/ramielsawy/nbe-statement-parser/Node.js%20CI)](https://github.com/ramielsawy/nbe-statement-parser/actions)
 [![Downloads](https://img.shields.io/npm/dt/nbe-statement-parser)](https://www.npmjs.com/package/nbe-statement-parser)
 
 **nbe-statement-parser** is a powerful library that helps you parse **National Bank of Egypt (NBE)** bank statements in PDF format into CSV or JSON formats. This is particularly useful for managing your finances, tracking expenses, budgeting, and integrating NBE transactions into financial tools like Excel, Google Sheets, or personal finance applications.
