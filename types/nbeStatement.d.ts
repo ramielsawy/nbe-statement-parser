@@ -8,7 +8,7 @@ export type NBEStatement = {
   accountCurrency: string;
   openingBalance: number;
   closingBalance: number;
-  statementFromDate: string;
-  statementToDate: string;
+  fromDate: string;
+  toDate: string;
   transactions: Transaction[];
 };

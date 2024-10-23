@@ -2,28 +2,85 @@ import fs from 'fs';
 import pdf from 'pdf-parse';
 import { parse } from 'json2csv';
 import { Transaction } from '../types/transaction';
+import { NBEStatement } from '../types/nbeStatement';
 import { InvalidPDFFormatError } from './errors';
 
-async function parseTransactionsFromPDFText(pdfText: string): Promise<Transaction[]> {
+async function parseNBEStatementFromPDFText(pdfText: string): Promise<NBEStatement> {
+
     // Step 1: Remove all new lines from the input text
     let cleanText = pdfText.replace(/\n/g, ' ').trim();
 
     console.log(cleanText);
-    // Define a regular expression to match the opening balance
-    const openingBalanceRegex = /Opening Balance.*?EGP([\d,]+\.\d{2})/;
+    // Extract statement information
+    const statementInfo: NBEStatement = {
+        dateTime: new Date(),
+        customerId: '',
+        customerName: '',
+        accountNumber: '',
+        accountCurrency: '',
+        openingBalance: 0,
+        closingBalance: 0,
+        fromDate: '',
+        toDate: '',
+        transactions: []
+    };
 
-    // Find the first match of the opening balance
-    const openingBalanceMatch = cleanText.match(openingBalanceRegex);
-
-    // Initialize the balance variable
-    let balance = 0;
-
-    // If a match is found, parse it to a number
-    if (openingBalanceMatch && openingBalanceMatch[1]) {
-        console.log("Opening Balance Match Found");
-        // Remove commas and convert to number
-        balance = parseFloat(openingBalanceMatch[1].replace(/,/g, ''));
+    // Extract date and time
+    const dateTimeMatch = cleanText.match(/as of (\d{2} \w+ \d{4} \d{2}:\d{2}:\d{2} GMT \+\d{4})/);
+    if (dateTimeMatch) {
+        statementInfo.dateTime = new Date(dateTimeMatch[1]);
     }
+
+    // Extract customer name
+    const customerNameMatch = cleanText.match(/\d{2}:\d{2}:\d{2} GMT \+\d{4}\s+(.*?)\s*:\s*Customer Name/);
+    if (customerNameMatch) {
+        statementInfo.customerName = customerNameMatch[1].trim();
+    } else {
+        console.warn("Customer name not found in the statement.");
+    }
+
+    // Extract account number (19 digits before the currency) and customer ID
+    const accountInfoMatch = cleanText.match(/To Date.*?(\d+).*?(\d{19})\s*(?:EGP|USD|EUR|GBP)/);
+    if (accountInfoMatch) {
+        statementInfo.customerId = accountInfoMatch[1];
+        statementInfo.accountNumber = accountInfoMatch[2];
+    } else {
+        console.warn("Could not extract customer ID and account number.");
+    }
+
+    // Extract currency, opening balance, and closing balance
+    const balanceMatch = cleanText.match(/Opening Balance.*?(\w{3})([\d,]+\.\d{2})([\d,]+\.\d{2})/);
+    if (balanceMatch) {
+        statementInfo.accountCurrency = balanceMatch[1];
+        statementInfo.openingBalance = parseFloat(balanceMatch[2].replace(/,/g, ''));
+        statementInfo.closingBalance = parseFloat(balanceMatch[3].replace(/,/g, ''));
+    }
+
+    // Extract from date and to date
+    const datePattern = /(\d{1,2}-\s*[A-Za-z]+\s*-\s*\d{4})/g;
+    const dates = cleanText.match(datePattern);
+
+    if (dates && dates.length >= 2) {
+        statementInfo.fromDate = convertToISO8601(dates[0].replace(/\s+/g, ''));
+        statementInfo.toDate = convertToISO8601(dates[1].replace(/\s+/g, ''));
+    } else {
+        console.warn("Could not extract both from and to dates.");
+    }
+
+    // Log extracted dates for debugging
+    console.log("Extracted from date:", statementInfo.fromDate);
+    console.log("Extracted to date:", statementInfo.toDate);
+
+    console.log(statementInfo);
+    // Extract transactions (using the existing logic)
+    statementInfo.transactions = await parseTransactionsFromPDFText(cleanText, statementInfo.openingBalance);
+
+    return statementInfo;
+}
+
+async function parseTransactionsFromPDFText(cleanText: string, balance: number): Promise<Transaction[]> {
+    // Step 1: Remove all new lines from the input text
+    cleanText = cleanText.replace(/\n/g, ' ').trim();
 
     // Step 2: Remove everything before the first occurrence of "Transaction Date"
     cleanText = cleanText.substring(cleanText.indexOf("Transaction Date"));
@@ -131,16 +188,16 @@ async function parseTransactionsFromPDFText(pdfText: string): Promise<Transactio
     return bankTransactions;
 }
 
-export async function parseNBEStatementPDF(filePath: string): Promise<Transaction[]> {
+export async function parseNBEStatementPDF(filePath: string): Promise<NBEStatement> {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdf(dataBuffer);
-    return parseTransactionsFromPDFText(data.text);
+    return parseNBEStatementFromPDFText(data.text);
 }
 
 export async function convertNBEStatementToCSV(filePath: string): Promise<string> {
-    const transactions = await parseNBEStatementPDF(filePath);
+    const statement = await parseNBEStatementPDF(filePath);
     const fields = ['transactionDate', 'valueDate', 'referenceNo', 'description', 'debit', 'credit', 'balance'];
-    return parse(transactions, { fields });
+    return parse(statement.transactions, { fields });
 }
 
 /**
