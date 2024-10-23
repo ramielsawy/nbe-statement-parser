@@ -4,6 +4,9 @@ import { parse } from 'json2csv';
 import { Transaction } from '../types/transaction';
 import { NBEStatement } from '../types/nbeStatement';
 
+const DATE_PATTERN_WITH_SPACES = /(\d{2})-\s*(\w{3,})-(\d{4})/g;
+const DATE_PATTERN = /(\d{2}-\w{3,}-\d{4})/g;
+
 interface TransactionAmounts {
     credit: number;
     debit: number;
@@ -14,18 +17,34 @@ interface StatementPeriod {
     startDate: string;
     endDate: string;
 }
+
+/**
+ * 
+ * @param filePath path to the NBE statement PDF file
+ * @returns CSV string of the tr
+ */
 export async function convertNBEStatementToCSV(filePath: string): Promise<string> {
     const statement = await parseNBEStatementPDF(filePath);
     const fields = ['transactionDate', 'valueDate', 'referenceNo', 'description', 'debit', 'credit', 'balance'];
     return parse(statement.transactions, { fields });
 }
 
+/**
+ * 
+ * @param filePath path to the NBE statement PDF file
+ * @returns NBEStatement object which contains the statement information and the transactions
+ */
 export async function parseNBEStatementPDF(filePath: string): Promise<NBEStatement> {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdf(dataBuffer);
     return parseNBEStatementFromPDFText(data.text);
 }
 
+/**
+ * 
+ * @param pdfText text extracted from the PDF
+ * @returns NBEStatement object which contains the statement information and the transactions
+ */
 async function parseNBEStatementFromPDFText(pdfText: string): Promise<NBEStatement> {
     // Step 1: Remove new lines from the input text
     const cleanText = pdfText.replace(/\n/g, ' ').trim();
@@ -66,6 +85,12 @@ async function parseNBEStatementFromPDFText(pdfText: string): Promise<NBEStateme
     return statementInfo;
 }
 
+/**
+ * 
+ * @param cleanText text extracted from the PDF
+ * @param openingBalance opening balance of the account
+ * @returns array of transactions
+ */
 async function parseTransactionsFromPDFText(cleanText: string, openingBalance: number): Promise<Transaction[]> {
     // Step 1: Remove all new lines from the input text
     cleanText = cleanText.replace(/\n/g, ' ').trim();
@@ -99,9 +124,10 @@ async function parseTransactionsFromPDFText(cleanText: string, openingBalance: n
         transaction = transaction.replace(/[\d,]+(\.\d{2})/g, '').trim();
 
         // remove the transaction date and value date from the transaction string
-        transaction = transaction.replace(/(\d{2}-\w{3,}-\d{4})/g, '').trim();
+        transaction = transaction.replace(DATE_PATTERN_WITH_SPACES, '');
 
         // Assign the rest of the transaction string to the description
+        // TODO: Add reference number extraction
         const description = transaction;
 
         // Update the current balance
@@ -124,9 +150,9 @@ async function parseTransactionsFromPDFText(cleanText: string, openingBalance: n
 }
 
 /**
- * 
- * @param dateString string in the format DD-MMM-YYYY
- * @returns string in the format YYYY-MM-DD
+ * Converts a date string from DD-MMM-YYYY format to ISO 8601 (YYYY-MM-DD) format.
+ * @param dateString - The date string in DD-MMM-YYYY format.
+ * @returns The date string in YYYY-MM-DD format.
  */
 function convertToISO8601(dateString: string): string {
     // Split the input string into day, month, and year
@@ -148,9 +174,10 @@ function convertToISO8601(dateString: string): string {
 }
 
 /**
- * 
- * @param cleanText statement text
- * @returns date and time of the statement
+ * Extracts the date and time from the statement text.
+ * @param cleanText - The cleaned text of the bank statement.
+ * @returns The date and time of the statement as a Date object.
+ * @throws {Error} If the date and time are not found in the statement.
  */
 function extractDateTime(cleanText: string): Date {
     const dateTimeMatch = cleanText.match(/as of (\d{2} \w+ \d{4} \d{2}:\d{2}:\d{2} GMT \+\d{4})/);
@@ -161,9 +188,10 @@ function extractDateTime(cleanText: string): Date {
 }
 
 /**
- * 
- * @param cleanText statement text
- * @returns customer name
+ * Extracts the customer name from the statement text.
+ * @param cleanText - The cleaned text of the bank statement.
+ * @returns The customer name.
+ * @throws {Error} If the customer name is not found in the statement.
  */
 function extractCustomerName(cleanText: string): string {
     const customerNameMatch = cleanText.match(/\d{2}:\d{2}:\d{2} GMT \+\d{4}\s+(.*?)\s*:\s*Customer Name/);
@@ -173,6 +201,12 @@ function extractCustomerName(cleanText: string): string {
     throw new Error("Customer name not found in the statement.");
 }
 
+/**
+ * Extracts the account information from the statement text.
+ * @param cleanText - The cleaned text of the bank statement.
+ * @returns An object containing the customer ID and account number.
+ * @throws {Error} If the customer ID and account number cannot be extracted.
+ */
 function extractAccountInfo(cleanText: string): { customerId: string; accountNumber: string } {
     const accountInfoMatch = cleanText.match(/To Date.*?(\d+).*?(\d{19})\s*(EGP|USD|EUR|GBP)/);
     if (accountInfoMatch) {
@@ -184,6 +218,12 @@ function extractAccountInfo(cleanText: string): { customerId: string; accountNum
     throw new Error("Could not extract customer ID and account number.");
 }
 
+/**
+ * Extracts the balance information from the statement text.
+ * @param cleanText - The cleaned text of the bank statement.
+ * @returns An object containing the account currency, opening balance, and closing balance.
+ * @throws {Error} If the balance information cannot be extracted.
+ */
 function extractBalanceInfo(cleanText: string): { accountCurrency: string; openingBalance: number; closingBalance: number } {
     const balanceMatch = cleanText.match(/Opening Balance.*?(\w{3})([\d,]+\.\d{2})([\d,]+\.\d{2})/);
     if (balanceMatch) {
@@ -196,6 +236,12 @@ function extractBalanceInfo(cleanText: string): { accountCurrency: string; openi
     throw new Error("Could not extract balance information.");
 }
 
+/**
+ * Extracts the statement period from the statement text.
+ * @param cleanText - The cleaned text of the bank statement.
+ * @returns An object containing the start and end dates of the statement period.
+ * @throws {Error} If both from and to dates cannot be extracted.
+ */
 function extractStatementPeriod(cleanText: string): StatementPeriod {
     const datePattern = /(\d{1,2}-\s*[A-Za-z]+\s*-\s*\d{4})/g;
     const dates = cleanText.match(datePattern);
@@ -209,6 +255,11 @@ function extractStatementPeriod(cleanText: string): StatementPeriod {
     throw new Error("Could not extract both from and to dates.");
 }
 
+/**
+ * Extracts individual transactions from the statement text.
+ * @param cleanText - The cleaned text of the bank statement.
+ * @returns An array of transaction strings.
+ */
 function extractTransactions(cleanText: string): string[] {
     const transactionRegex = /(\d{2}-\s?\w{3,}-\d{4})\s*(\d{2}-\s?\w{3,}-\d{4}|\d{2}-\w+-\d{4})/g;
     let match;
@@ -232,12 +283,17 @@ function extractTransactions(cleanText: string): string[] {
     return transactions;
 }
 
+/**
+ * Extracts the transaction date and value date from a transaction string.
+ * @param transaction - The transaction string.
+ * @returns An object containing the transaction date and value date.
+ * @throws {Error} If the dates cannot be extracted from the transaction string.
+ */
 function extractValueAndTransactionDates(transaction: string): { transactionDate: string, valueDate: string } {
     // Normalize the date format to ensure it's in the format DD-MMM-YYYY
-    transaction = transaction.replace(/(\d{2})-\s*(\w{3,})-(\d{4})/g, '$1-$2-$3');
+    transaction = transaction.replace(DATE_PATTERN_WITH_SPACES, '$1-$2-$3');
 
-    const dateRegex = /(\d{2}-\w{3,}-\d{4})/g;
-    const dates = transaction.match(dateRegex);
+    const dates = transaction.match(DATE_PATTERN);
 
     if (dates && dates.length == 2) {
         return {
@@ -249,6 +305,13 @@ function extractValueAndTransactionDates(transaction: string): { transactionDate
     }
 }
 
+/**
+ * Extracts the transaction amounts from a transaction string.
+ * @param transaction - The transaction string.
+ * @param previousBalance - The balance before this transaction.
+ * @returns An object containing the credit, debit, and new balance amounts, or null if extraction fails.
+ * @throws {Error} If the transaction amounts cannot be extracted.
+ */
 function extractTransactionAmounts(transaction: string, previousBalance: number): TransactionAmounts | null {
     const lastDotIndex = transaction.lastIndexOf('.');
     if (lastDotIndex === -1) return null;
@@ -260,7 +323,8 @@ function extractTransactionAmounts(transaction: string, previousBalance: number)
     while (transactionAmountStart >= 0 && /[\d,]/.test(transaction[transactionAmountStart])) {
         transactionAmountStart--;
     }
-    transactionAmountStart++; // Move back to the first digit or comma
+    // Move back to the first digit or comma
+    transactionAmountStart++;
 
     const transactionAmount = transaction.substring(transactionAmountStart, secondLastDotIndex + 3);
     const balanceAmount = transaction.substring(secondLastDotIndex + 3);
@@ -285,4 +349,3 @@ function extractTransactionAmounts(transaction: string, previousBalance: number)
 
     return { credit, debit, balance };
 }
-
