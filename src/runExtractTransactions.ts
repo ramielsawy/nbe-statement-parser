@@ -1,4 +1,4 @@
-import { parseNBEStatementPDF, convertNBEStatementToCSV } from './parseNBEStatement';
+import { convertNBEStatementToCSV } from './parseNBEStatement';
 import fs from 'fs';
 
 // Path to the PDF file you want to convert

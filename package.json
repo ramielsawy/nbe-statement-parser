@@ -9,12 +9,11 @@
         "lint": "eslint src/**/*.ts",
         "prepublishOnly": "npm run build"
     },
-    "author": "Your Name",
+    "author": "Rami Elsawy",
     "license": "MIT",
     "dependencies": {
         "json2csv": "^5.0.6",
-        "pdf-parse": "^1.1.1",
-        "pdf2table": "^0.0.2"
+        "pdf-parse": "^1.1.1"
     },
     "devDependencies": {
         "@types/jest": "^29.0.0",

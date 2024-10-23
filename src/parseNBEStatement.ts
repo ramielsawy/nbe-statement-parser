@@ -312,12 +312,16 @@ function extractValueAndTransactionDates(transaction: string): { transactionDate
  * @returns An object containing the credit, debit, and new balance amounts, or null if extraction fails.
  * @throws {Error} If the transaction amounts cannot be extracted.
  */
-function extractTransactionAmounts(transaction: string, previousBalance: number): TransactionAmounts | null {
+function extractTransactionAmounts(transaction: string, previousBalance: number): TransactionAmounts {
     const lastDotIndex = transaction.lastIndexOf('.');
-    if (lastDotIndex === -1) return null;
+    if (lastDotIndex === -1) {
+        throw new Error(`Failed to extract balance amount from transaction: ${transaction}`);
+    }
 
     const secondLastDotIndex = transaction.lastIndexOf('.', lastDotIndex - 1);
-    if (secondLastDotIndex === -1) return null;
+    if (secondLastDotIndex === -1) {
+        throw new Error(`Failed to extract transaction amount from transaction: ${transaction}`);
+    }
 
     let transactionAmountStart = secondLastDotIndex - 1;
     while (transactionAmountStart >= 0 && /[\d,]/.test(transaction[transactionAmountStart])) {
