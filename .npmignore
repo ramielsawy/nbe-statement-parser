@@ -1,0 +1,8 @@
+src
+__tests__
+.github
+.gitignore
+tsconfig.json
+jest.config.js
+*.pdf
+*.csv

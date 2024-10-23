@@ -3,14 +3,34 @@
     "version": "1.0.0",
     "description": "Parse National Bank of Egypt (NBE) statements from PDF to CSV or JSON for budgeting and financial management.",
     "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ramielsawy/nbe-statement-parser.git"
+    },
+    "keywords": [
+        "nbe",
+        "national-bank-of-egypt",
+        "bank-statement",
+        "pdf-parser",
+        "csv-converter",
+        "financial-management"
+    ],
+    "author": "Rami Elsawy",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ramielsawy/nbe-statement-parser/issues"
+    },
+    "homepage": "https://github.com/ramielsawy/nbe-statement-parser#readme",
     "scripts": {
         "build": "tsc",
         "test": "jest",
         "lint": "eslint src/**/*.ts",
         "prepublishOnly": "npm run build"
     },
-    "author": "Rami Elsawy",
-    "license": "MIT",
     "dependencies": {
         "json2csv": "^5.0.6",
         "pdf-parse": "^1.1.1"
