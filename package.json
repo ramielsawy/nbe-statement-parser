@@ -1,7 +1,7 @@
 {
     "name": "nbe-statement-parser",
-    "version": "1.0.0",
-    "description": "Parse National Bank of Egypt (NBE) statements from PDF to CSV or JSON for budgeting and financial management.",
+    "version": "1.1.0",
+    "description": "Parse bank statements from PDF to CSV or JSON for budgeting and financial management.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
     "files": [
@@ -28,6 +28,7 @@
     "scripts": {
         "build": "tsc",
         "test": "jest",
+        "test:watch": "jest --watch",
         "lint": "eslint src/**/*.ts",
         "prepublishOnly": "npm run build"
     },
@@ -36,12 +37,14 @@
         "pdf-parse": "^1.1.1"
     },
     "devDependencies": {
-        "@types/jest": "^29.0.0",
+        "@types/dotenv": "^8.2.3",
+        "@types/jest": "^29.5.14",
         "@types/json2csv": "^5.0.7",
         "@types/node": "^20.0.0",
         "@types/pdf-parse": "^1.1.4",
-        "jest": "^29.0.0",
-        "ts-jest": "^29.0.0",
+        "dotenv": "^16.4.5",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.2.5",
         "typescript": "^5.0.0"
     }
 }

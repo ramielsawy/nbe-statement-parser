@@ -1,6 +1,6 @@
 import { Transaction } from './transaction';
 
-export type NBEStatement = {
+export type BankStatement = {
   dateTime: Date;
   customerId: string;
   customerName: string;

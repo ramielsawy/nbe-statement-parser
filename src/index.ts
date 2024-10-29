@@ -1,1 +1,1 @@
-export { parseNBEStatementPDF, convertNBEStatementToCSV } from './parseNBEStatement';
+export { parseBankStatementPDF as parseNBEStatementPDF, convertPDFStatementToCSV as convertNBEStatementToCSV } from './parseBankStatement';

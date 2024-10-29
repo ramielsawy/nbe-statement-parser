@@ -1,18 +1,15 @@
-# nbe-statement-parser
+# bank-pdf-statement-parser
 
 [![npm version](https://img.shields.io/npm/v/nbe-statement-parser)](https://www.npmjs.com/package/nbe-statement-parser)
 [![License](https://img.shields.io/npm/l/nbe-statement-parser)](LICENSE)
 [![Build Status](https://img.shields.io/github/workflow/status/ramielsawy/nbe-statement-parser/Node.js%20CI)](https://github.com/ramielsawy/nbe-statement-parser/actions)
 [![Downloads](https://img.shields.io/npm/dt/nbe-statement-parser)](https://www.npmjs.com/package/nbe-statement-parser)
 
-**nbe-statement-parser** is a powerful library that helps you parse **National Bank of Egypt (NBE)** bank statements in PDF format into CSV or JSON formats. This is particularly useful for managing your finances, tracking expenses, budgeting, and integrating NBE transactions into financial tools like Excel, Google Sheets, or personal finance applications.
-
-## Disclaimer
-This library is not affiliated with, endorsed by, or officially connected to the National Bank of Egypt (NBE) or any of its subsidiaries. "NBE" is used solely for descriptive purposes and does not imply any association with the National Bank of Egypt.
+A powerful library that helps you parse bank statements in PDF format into CSV or JSON formats. This tool is particularly useful for managing your finances, tracking expenses, budgeting, and integrating bank transactions into financial tools like Excel, Google Sheets, or personal finance applications.
 
 ## Features
 
-- **PDF to CSV/JSON conversion**: Extracts transactions from NBE bank statements and exports them in CSV or JSON format.
+- **PDF to CSV/JSON conversion**: Extracts transactions from bank statements and exports them in CSV or JSON format.
 - **Detailed Statement Information**: Extracts additional information such as customer name, account number, statement period, and balance details.
 - **Date Formatting**: Converts dates to ISO 8601 format for better compatibility with various systems.
 - **Error Handling & Validation**: Provides defensive checks to ensure accurate data extraction. If the PDF structure changes or transactions are formatted incorrectly, the library will throw meaningful errors.
@@ -20,46 +17,37 @@ This library is not affiliated with, endorsed by, or officially connected to the
 
 ## Installation
 
-You can install `nbe-statement-parser` via npm:
-
-```bash
-npm install nbe-statement-parser
-```
-
-Or if you're using yarn:
-
-```bash
-yarn add nbe-statement-parser
-```
+You can install the package via npm
 
 ## Usage
 
-Here's a basic example of how to use `nbe-statement-parser`:
+Here's a basic example of how to use the library:
 
 ```typescript
-import { parseNBEStatementPDF, convertNBEStatementToCSV } from 'nbe-statement-parser';
-import fs from 'fs';
-
 // Path to the PDF file you want to convert
 const pdfFilePath = './statement.pdf';
 
 // Parse the PDF and get the statement object
-parseNBEStatementPDF(pdfFilePath)
+parseBankStatementPDF(pdfFilePath)
   .then((statement) => {
     console.log('Statement Information:', statement);
     
     // Convert to CSV
-    return convertNBEStatementToCSV(pdfFilePath);
+    return convertPDFStatementToCSV(pdfFilePath);
   })
   .then((csvData) => {
     // Save the CSV data to a file
-    fs.writeFileSync('nbe-transactions.csv', csvData);
+    fs.writeFileSync('transactions.csv', csvData);
     console.log('CSV file created successfully!');
   })
   .catch((err) => {
     console.error('Error processing PDF:', err.message);
   });
 ```
+
+### PDF Input Example
+
+![PDF Input Example](https://github.com/ramielsawy/bank-pdf-statement-parser/blob/main/assets/pdf-input-example.png)
 
 ### CSV Output Example
 
@@ -74,21 +62,21 @@ transactionDate,valueDate,referenceNo,description,debit,credit,balance
 
 ## API Reference
 
-### `parseNBEStatementPDF(filePath: string): Promise<NBEStatement>`
+### `parseBankStatementPDF(filePath: string): Promise<BankStatement>`
 
-Parses the NBE statement PDF and returns a Promise that resolves to an `NBEStatement` object containing all the extracted information.
+Parses the bank statement PDF and returns a Promise that resolves to a `BankStatement` object containing all the extracted information.
 
-### `convertNBEStatementToCSV(filePath: string): Promise<string>`
+### `convertPDFStatementToCSV(filePath: string): Promise<string>`
 
-Converts the NBE statement PDF to a CSV string. Returns a Promise that resolves to the CSV data as a string.
+Converts the bank statement PDF to a CSV string. Returns a Promise that resolves to the CSV data as a string.
 
 ## Error Handling
 
-`nbe-statement-parser` employs defensive programming techniques to ensure the integrity of the extracted data:
+The library employs defensive programming techniques to ensure the integrity of the extracted data:
 
 - If the PDF file does not contain the expected transaction format, it throws an error.
 - If no transactions are found, or any required field (like transaction date, reference number, or balance) is missing, an error will be thrown.
-- This ensures that any breaking changes in the NBE statement format will be immediately detected.
+ß- This ensures that any breaking changes in the bank statement format will be immediately detected.
 
 ## Development
 

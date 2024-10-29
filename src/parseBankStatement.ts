@@ -1,8 +1,8 @@
 import fs from 'fs';
 import pdf from 'pdf-parse';
 import { parse } from 'json2csv';
-import { Transaction } from '../types/transaction';
-import { NBEStatement } from '../types/nbeStatement';
+import { Transaction } from './types/transaction';
+import { BankStatement } from './types/bankStatement';
 
 const DATE_PATTERN_WITH_SPACES = /(\d{2})-\s*(\w{3,})-(\d{4})/g;
 const DATE_PATTERN = /(\d{2}-\w{3,}-\d{4})/g;
@@ -20,32 +20,32 @@ interface StatementPeriod {
 
 /**
  * 
- * @param filePath path to the NBE statement PDF file
- * @returns CSV string of the tr
+ * @param filePath path to the  PDF statement file
+ * @returns CSV string of the transactions
  */
-export async function convertNBEStatementToCSV(filePath: string): Promise<string> {
-    const statement = await parseNBEStatementPDF(filePath);
+export async function convertPDFStatementToCSV(filePath: string): Promise<string> {
+    const statement = await parseBankStatementPDF(filePath);
     const fields = ['transactionDate', 'valueDate', 'referenceNo', 'description', 'debit', 'credit', 'balance'];
     return parse(statement.transactions, { fields });
 }
 
 /**
  * 
- * @param filePath path to the NBE statement PDF file
- * @returns NBEStatement object which contains the statement information and the transactions
+ * @param filePath path to the bank statement PDF file
+ * @returns BankStatement object which contains the statement information and the transactions
  */
-export async function parseNBEStatementPDF(filePath: string): Promise<NBEStatement> {
+export async function parseBankStatementPDF(filePath: string): Promise<BankStatement> {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdf(dataBuffer);
-    return parseNBEStatementFromPDFText(data.text);
+    return parseBankStatementFromPDFText(data.text);
 }
 
 /**
  * 
  * @param pdfText text extracted from the PDF
- * @returns NBEStatement object which contains the statement information and the transactions
+ * @returns BankStatement object which contains the statement information and the transactions
  */
-async function parseNBEStatementFromPDFText(pdfText: string): Promise<NBEStatement> {
+async function parseBankStatementFromPDFText(pdfText: string): Promise<BankStatement> {
     // Step 1: Remove new lines from the input text
     const cleanText = pdfText.replace(/\n/g, ' ').trim();
 
@@ -67,7 +67,7 @@ async function parseNBEStatementFromPDFText(pdfText: string): Promise<NBEStateme
     // Step 7: Extract transactions
     const transactions = await parseTransactionsFromPDFText(cleanText, balanceInfo.openingBalance);
 
-    const statementInfo: NBEStatement = {
+    const statementInfo: BankStatement = {
         dateTime: dateTime,
         customerId: accountInfo.customerId,
         customerName: customerName,
