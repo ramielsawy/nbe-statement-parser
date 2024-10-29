@@ -7,7 +7,8 @@
 
 **nbe-statement-parser** is a powerful library that helps you parse **National Bank of Egypt (NBE)** bank statements in PDF format into CSV or JSON formats. This is particularly useful for managing your finances, tracking expenses, budgeting, and integrating NBE transactions into financial tools like Excel, Google Sheets, or personal finance applications.
 
-**Disclaimer:** This library is not affiliated with, endorsed by, or officially connected to the National Bank of Egypt (NBE) or any of its subsidiaries. "NBE" is used solely for descriptive purposes and does not imply any association with the National Bank of Egypt.
+## Disclaimer
+This library is not affiliated with, endorsed by, or officially connected to the National Bank of Egypt (NBE) or any of its subsidiaries. "NBE" is used solely for descriptive purposes and does not imply any association with the National Bank of Egypt.
 
 ## Features
 
